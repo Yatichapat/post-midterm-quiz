@@ -68,6 +68,24 @@ class Table:
             temps.append(dict_temp)
         return temps
 
+    def insert_row(self, dict):
+        '''
+        This method inserts a dictionary, dict, into a Table object, effectively adding a row to the Table.
+        '''
+        self.table.append(dict)
+
+
+    def update_row(self, primary_attribute, primary_attribute_value, update_attribute, update_value):
+        '''
+        This method updates the current value of update_attribute to update_value
+        For example, my_table.update_row('Film', 'A Serious Man', 'Year', '2022') will change the 'Year' attribute for the 'Film'
+        'A Serious Man' from 2009 to 2022
+        '''
+        self.table[primary_attribute] = self.table[update_attribute]
+        self.table[primary_attribute_value] = self.table[update_value]
+
+
+
     def pivot_table(self, keys_to_pivot_list, keys_to_aggreagte_list, aggregate_func_list):
 
         unique_values_list = []
@@ -99,4 +117,53 @@ class Table:
 
     def __str__(self):
         return self.table_name + ':' + str(self.table)
+
+
+
+movies = []
+with open(os.path.join(__location__, 'movies.csv')) as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        movies.append(dict(r))
+
+
+table_movie = Table('movies', movies)
+my_db = DB()
+my_db.insert(table_movie)
+my_table_movie = my_db.search('movies')
+
+
+my_table_movie_filter1 = my_table_movie.filter(lambda x: x['Genre'] == 'Comedy')
+comedy = []
+for item in my_table_movie_filter1.table:
+    comedy.append(float(item['Worldwide Gross']))
+print(f'the average value of Worldwide Gross for ‘Comedy’ movies: {sum(comedy) / len(comedy)}')
+
+
+new = my_table_movie.filter(lambda x: x['Genre'] == 'Drama')
+print("The minimum of Audience score %:", new.aggregate(lambda x: min(x), 'Audience score %'))
+
+
+my_table_movie_filtered = my_table_movie.filter(lambda x: x['Genre'] == 'Fantasy')
+print(f'Total Fantasy film is {len(my_table_movie_filtered.table)}')
+
+dict = {}
+dict['Film'] = 'The Shape of Water'
+dict['Genre'] = 'Fantasy'
+dict['Lead Studio'] = 'Fox'
+dict['Audience score %'] = '72'
+dict['Profitability'] = '9.765'
+dict['Rotten Tomatoes %'] = '92'
+dict['Worldwide Gross'] = '195.3'
+dict['Year'] = '2017'
+
+my_table_movie.insert_row(dict)
+
+my_table_movie_filtered = my_table_movie.filter(lambda  x: x['Genre'] == 'Fantasy')
+
+print(f'New Total Fantasy film is {len(my_table_movie_filtered.table)}')
+
+
+update_table = my_table_movie.update_row('Film', 'A Serious Man', 'Year', '2022')
+print(update_table)
 
